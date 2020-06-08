@@ -27,7 +27,8 @@ from IPython import display
 
 #PreProcessing Data
 (train_images, train_labels), (_, _) = tf.keras.datasets.cifar10.load_data()
-train_images = train_images.reshape(train_images.shape[0], 32, 32, 3).astype('float32')
+train_images=train_images.astype('float32')
+# train_images = train_images.reshape(train_images.shape[0], 32, 32, 3).astype('float32')
 train_images = (train_images - 127.5) / 127.5 # Normalize the images to [-1, 1]
 
 BUFFER_SIZE = 60000
@@ -35,9 +36,9 @@ BATCH_SIZE = 128
 # Batch and shuffle the data
 train_dataset = tf.data.Dataset.from_tensor_slices(train_images).shuffle(BUFFER_SIZE).batch(BATCH_SIZE)
 
-EPOCHS = 50
+EPOCHS = 200
 noise_dim = 100
-num_examples_to_generate = 16
+num_examples_to_generate = 4
 seed = tf.random.normal([num_examples_to_generate, noise_dim])
 
   
@@ -124,8 +125,8 @@ def generator_loss(fake_output):
     return cross_entropy(tf.ones_like(fake_output), fake_output)
 
 #Define optimisers
-generator_optimizer = tf.keras.optimizers.Adam(1e-4)
-discriminator_optimizer = tf.keras.optimizers.Adam(1e-4)
+generator_optimizer = tf.keras.optimizers.Adam(lr=0.0002, beta_1=0.5)
+discriminator_optimizer = tf.keras.optimizers.Adam(lr=0.0002, beta_1=0.5)
 
 
 
@@ -151,7 +152,8 @@ def generate_and_save_images(model, epoch, test_input):
 
   for i in range(predictions.shape[0]):
       plt.subplot(4, 4, i+1)
-      plt.imshow(predictions[i, :, :, :] * 127.5 + 127.5)
+      plt.imshow((np.asarray(predictions[i, :, :, :]*255).astype(np.uint8)))
+      # plt.imshow((predictions[i, :, :, :] * 127.5 + 127.5)
       plt.axis('off')
 
   plt.savefig('image_at_epoch_{:04d}.png'.format(epoch))
@@ -193,11 +195,12 @@ def train(dataset, epochs):
   for epoch in range(epochs):
     start = time.time()
     
+    count=0
     #Mini-batch training 
     for image_batch in dataset:
       gLoss,dLoss=train_step(image_batch)
-    
-    print ("Generator Loss: %f, Discriminator Loss %f"%(gLoss,dLoss))
+      print ("Epoch: %f , %f/%f Generator Loss: %f, Discriminator Loss %f"%(epoch,count,BATCH_SIZE,gLoss,dLoss))
+      count+=1
 
     # Produce images for the GIF as we go
     display.clear_output(wait=True)
@@ -208,7 +211,7 @@ def train(dataset, epochs):
       checkpoint.save(file_prefix = checkpoint_prefix)
 
     print ('Time for epoch {} is {} sec'.format(epoch + 1, time.time()-start))
-
+    
   # Generate after the final epoch
   display.clear_output(wait=True)
   generate_and_save_images(generator,

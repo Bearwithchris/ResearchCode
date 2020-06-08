@@ -137,7 +137,7 @@ def discriminator_loss(real_output, fake_output):
     total_loss = real_loss + fake_loss
     return total_loss
 
-def generator_loss(fake_output):
+def generator_loss(fake_output): #Preidct the fake output are real
     return cross_entropy(tf.ones_like(fake_output), fake_output)
 
 #Define optimisers
@@ -192,7 +192,7 @@ def train_step(images):
       real_output = discriminator(images, training=True) #Discrimate real output 
       fake_output = discriminator(generated_images, training=True) #Discriminate fake output
 
-      gen_loss = generator_loss(fake_output) #Ability to fakeout the discriminator log(1-D(G(z)))
+      gen_loss = generator_loss(fake_output) #Ability to fakeout the discriminator max -log(D(G(z)))
       disc_loss = discriminator_loss(real_output, fake_output) #Ability to identify fake and truth 
 
     #Differentiate w.r.t to trainable variables

@@ -138,7 +138,7 @@ def save_plot(examples, epoch, n=7):
 	# save plot to file
 	filename = 'generated_plot_e%03d.png' % (epoch+1)
 	pyplot.savefig(filename)
-	pyplot.close()
+# 	pyplot.close()
 
 # evaluate the discriminator, plot generated images, save generator model
 def summarize_performance(epoch, g_model, d_model, dataset, latent_dim, n_samples=150):
