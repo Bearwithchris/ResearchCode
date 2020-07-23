@@ -77,20 +77,20 @@ standard_model.fit(cat_train, steps_per_epoch = 23262//TRAIN_BATCH_SIZE, epochs=
 validation_steps=10, callbacks=callbacks)
 
 
-#Global Average pooling model 
-average_pool = tf.keras.Sequential()
-average_pool.add(layers.AveragePooling2D())
-average_pool.add(layers.Flatten())
-average_pool.add(layers.Dense(1, activation='sigmoid'))
-# create the average pooling model
-pool_model = tf.keras.Sequential([
- head,
- average_pool])
+# #Global Average pooling model 
+# average_pool = tf.keras.Sequential()
+# average_pool.add(layers.AveragePooling2D())
+# average_pool.add(layers.Flatten())
+# average_pool.add(layers.Dense(1, activation='sigmoid'))
+# # create the average pooling model
+# pool_model = tf.keras.Sequential([
+#  head,
+#  average_pool])
 
-# train the standard classifier model
-pool_model.compile(optimizer=tf.keras.optimizers.Adam(),
- loss='binary_crossentropy',
- metrics=['accuracy'])
+# # train the standard classifier model
+# pool_model.compile(optimizer=tf.keras.optimizers.Adam(),
+#  loss='binary_crossentropy',
+#  metrics=['accuracy'])
 
-pool_model.fit(cat_train, steps_per_epoch = 23262//TRAIN_BATCH_SIZE, epochs=10, validation_data=cat_valid,
-validation_steps=10, callbacks=callbacks)
+# pool_model.fit(cat_train, steps_per_epoch = 23262//TRAIN_BATCH_SIZE, epochs=10, validation_data=cat_valid,
+# validation_steps=10, callbacks=callbacks)
