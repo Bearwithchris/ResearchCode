@@ -2,12 +2,12 @@ import functools
 
 import imlib as im
 import numpy as np
-import pylib as py
+import pylib as py #File path system lib
 import tensorflow as tf
 import tensorflow.keras as keras
 import tf2lib as tl
 import tf2gan as gan
-import tqdm
+import tqdm #Progress bar 
 
 import data
 import module
@@ -46,8 +46,8 @@ py.args_to_yaml(py.join(output_dir, 'settings.yml'), args)
 # =                                    data                                    =
 # ==============================================================================
 
-A_img_paths = py.glob(py.join(args.datasets_dir, args.dataset, 'trainA'), '*.jpg')
-B_img_paths = py.glob(py.join(args.datasets_dir, args.dataset, 'trainB'), '*.jpg')
+A_img_paths = py.glob(py.join(args.datasets_dir, args.dataset, 'trainA'), '*.jpg')      #Horse dataset
+B_img_paths = py.glob(py.join(args.datasets_dir, args.dataset, 'trainB'), '*.jpg')      #Zebra Dataset
 A_B_dataset, len_dataset = data.make_zip_dataset(A_img_paths, B_img_paths, args.batch_size, args.load_size, args.crop_size, training=True, repeat=False)
 
 A2B_pool = data.ItemPool(args.pool_size)
@@ -62,16 +62,22 @@ A_B_dataset_test, _ = data.make_zip_dataset(A_img_paths_test, B_img_paths_test, 
 # =                                   models                                   =
 # ==============================================================================
 
+#Create Generator models
 G_A2B = module.ResnetGenerator(input_shape=(args.crop_size, args.crop_size, 3))
 G_B2A = module.ResnetGenerator(input_shape=(args.crop_size, args.crop_size, 3))
+tf.keras.utils.plot_model(G_A2B,to_file='Generator.png', show_shapes=True, dpi=64) #Added to visualise model
 
+#Create discriminator Models
 D_A = module.ConvDiscriminator(input_shape=(args.crop_size, args.crop_size, 3))
 D_B = module.ConvDiscriminator(input_shape=(args.crop_size, args.crop_size, 3))
+tf.keras.utils.plot_model(D_A,to_file='Discriminator.png', show_shapes=True, dpi=64) #Added to visualise model
 
+#Retrieve loss function
 d_loss_fn, g_loss_fn = gan.get_adversarial_losses_fn(args.adversarial_loss_mode)
 cycle_loss_fn = tf.losses.MeanAbsoluteError()
 identity_loss_fn = tf.losses.MeanAbsoluteError()
 
+#Learning rate + Optimizer 
 G_lr_scheduler = module.LinearDecay(args.lr, args.epochs * len_dataset, args.epoch_decay * len_dataset)
 D_lr_scheduler = module.LinearDecay(args.lr, args.epochs * len_dataset, args.epoch_decay * len_dataset)
 G_optimizer = keras.optimizers.Adam(learning_rate=G_lr_scheduler, beta_1=args.beta_1)
@@ -85,23 +91,34 @@ D_optimizer = keras.optimizers.Adam(learning_rate=D_lr_scheduler, beta_1=args.be
 @tf.function
 def train_G(A, B):
     with tf.GradientTape() as t:
+        
+        #Training regular Generator A->B , B->A
         A2B = G_A2B(A, training=True)
         B2A = G_B2A(B, training=True)
+        
+        #Training Generator to conver back G(A)->A , G(B)->B
         A2B2A = G_B2A(A2B, training=True)
         B2A2B = G_A2B(B2A, training=True)
+        
+        #Identity Loss needs A->A and B->B
         A2A = G_B2A(A, training=True)
         B2B = G_A2B(B, training=True)
 
+        #Discriminaotr A->B (Real/Fake) , B->A (Real/Fake)
         A2B_d_logits = D_B(A2B, training=True)
         B2A_d_logits = D_A(B2A, training=True)
 
+        #Adversarial loss 
         A2B_g_loss = g_loss_fn(A2B_d_logits)
         B2A_g_loss = g_loss_fn(B2A_d_logits)
+        
+        #Cycle Loss
         A2B2A_cycle_loss = cycle_loss_fn(A, A2B2A)
         B2A2B_cycle_loss = cycle_loss_fn(B, B2A2B)
         A2A_id_loss = identity_loss_fn(A, A2A)
         B2B_id_loss = identity_loss_fn(B, B2B)
 
+        
         G_loss = (A2B_g_loss + B2A_g_loss) + (A2B2A_cycle_loss + B2A2B_cycle_loss) * args.cycle_loss_weight + (A2A_id_loss + B2B_id_loss) * args.identity_loss_weight
 
     G_grad = t.gradient(G_loss, G_A2B.trainable_variables + G_B2A.trainable_variables)
@@ -118,16 +135,22 @@ def train_G(A, B):
 @tf.function
 def train_D(A, B, A2B, B2A):
     with tf.GradientTape() as t:
-        A_d_logits = D_A(A, training=True)
-        B2A_d_logits = D_A(B2A, training=True)
-        B_d_logits = D_B(B, training=True)
-        A2B_d_logits = D_B(A2B, training=True)
-
+        A_d_logits = D_A(A, training=True)               #Discriminate A real/fake
+        B2A_d_logits = D_A(B2A, training=True)           #Discriminate B2A real/fake
+        B_d_logits = D_B(B, training=True)               #Discriminate B real/fake
+        A2B_d_logits = D_B(A2B, training=True)           #Discriminate A2B real/fake
+        
+        #Adversarial loss=============================================
+        #Discriminator Loss for A (Least square GAN)
         A_d_loss, B2A_d_loss = d_loss_fn(A_d_logits, B2A_d_logits)
+        #Discriminator Loss for B (Least Square GAN)
         B_d_loss, A2B_d_loss = d_loss_fn(B_d_logits, A2B_d_logits)
+        
+        #Interpolation Loss
         D_A_gp = gan.gradient_penalty(functools.partial(D_A, training=True), A, B2A, mode=args.gradient_penalty_mode)
         D_B_gp = gan.gradient_penalty(functools.partial(D_B, training=True), B, A2B, mode=args.gradient_penalty_mode)
 
+    
         D_loss = (A_d_loss + B2A_d_loss) + (B_d_loss + A2B_d_loss) + (D_A_gp + D_B_gp) * args.gradient_penalty_weight
 
     D_grad = t.gradient(D_loss, D_A.trainable_variables + D_B.trainable_variables)

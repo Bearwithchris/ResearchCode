@@ -42,7 +42,7 @@ def get_hinge_v2_losses_fn():
     return d_loss_fn, g_loss_fn
 
 
-def get_lsgan_losses_fn():
+def get_lsgan_losses_fn():  #Default
     mse = tf.losses.MeanSquaredError()
 
     def d_loss_fn(r_logit, f_logit):
@@ -84,7 +84,11 @@ def get_adversarial_losses_fn(mode):
 
 
 def gradient_penalty(f, real, fake, mode):
+    
+    
     def _gradient_penalty(f, real, fake=None):
+        
+        #Interpolate between real and fake data
         def _interpolate(a, b=None):
             if b is None:   # interpolation in DRAGAN
                 beta = tf.random.uniform(shape=tf.shape(a), minval=0., maxval=1.)

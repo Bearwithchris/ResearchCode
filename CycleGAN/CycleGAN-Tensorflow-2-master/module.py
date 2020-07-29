@@ -26,15 +26,18 @@ def ResnetGenerator(input_shape=(256, 256, 3),
                     norm='instance_norm'):
     Norm = _get_norm_layer(norm)
 
+    #Residual Block
     def _residual_block(x):
         dim = x.shape[-1]
         h = x
-
+        
+        #First Conv2D (same_dam, filter_size=3 , stride=1 ) + batch_norm + relu
         h = tf.pad(h, [[0, 0], [1, 1], [1, 1], [0, 0]], mode='REFLECT')
         h = keras.layers.Conv2D(dim, 3, padding='valid', use_bias=False)(h)
         h = Norm()(h)
         h = tf.nn.relu(h)
 
+        #Second Conv2D (same_dam, filter_size=3 , stride=1 ) + batch_norm + relu
         h = tf.pad(h, [[0, 0], [1, 1], [1, 1], [0, 0]], mode='REFLECT')
         h = keras.layers.Conv2D(dim, 3, padding='valid', use_bias=False)(h)
         h = Norm()(h)
@@ -44,31 +47,31 @@ def ResnetGenerator(input_shape=(256, 256, 3),
     # 0
     h = inputs = keras.Input(shape=input_shape)
 
-    # 1
+    # Layer 1 (64 filter , 7x7 kernal size)
     h = tf.pad(h, [[0, 0], [3, 3], [3, 3], [0, 0]], mode='REFLECT')
     h = keras.layers.Conv2D(dim, 7, padding='valid', use_bias=False)(h)
     h = Norm()(h)
     h = tf.nn.relu(h)
 
-    # 2
+    # Layer 2 and 3 (128/256 filter 3x3 filter size) 
     for _ in range(n_downsamplings):
         dim *= 2
         h = keras.layers.Conv2D(dim, 3, strides=2, padding='same', use_bias=False)(h)
         h = Norm()(h)
         h = tf.nn.relu(h)
 
-    # 3
+    # Layer Resiudal Block
     for _ in range(n_blocks):
         h = _residual_block(h)
 
-    # 4
+    # Layer 4 and 5 upsample in the oppoisite direction of 2 and 3
     for _ in range(n_downsamplings):
         dim //= 2
         h = keras.layers.Conv2DTranspose(dim, 3, strides=2, padding='same', use_bias=False)(h)
         h = Norm()(h)
         h = tf.nn.relu(h)
 
-    # 5
+    # Layer 6 upsampling of 1
     h = tf.pad(h, [[0, 0], [3, 3], [3, 3], [0, 0]], mode='REFLECT')
     h = keras.layers.Conv2D(output_channels, 7, padding='valid')(h)
     h = tf.tanh(h)
@@ -86,25 +89,27 @@ def ConvDiscriminator(input_shape=(256, 256, 3),
     # 0
     h = inputs = keras.Input(shape=input_shape)
 
-    # 1
+    # Layer 1 conv2D(dim=64, kernal=4x4)
     h = keras.layers.Conv2D(dim, 4, strides=2, padding='same')(h)
     h = tf.nn.leaky_relu(h, alpha=0.2)
-
+    
+    #Layer 2,3 
     for _ in range(n_downsamplings - 1):
         dim = min(dim * 2, dim_ * 8)
         h = keras.layers.Conv2D(dim, 4, strides=2, padding='same', use_bias=False)(h)
         h = Norm()(h)
         h = tf.nn.leaky_relu(h, alpha=0.2)
 
-    # 2
+    # Layer 4
     dim = min(dim * 2, dim_ * 8)
     h = keras.layers.Conv2D(dim, 4, strides=1, padding='same', use_bias=False)(h)
     h = Norm()(h)
     h = tf.nn.leaky_relu(h, alpha=0.2)
 
-    # 3
+    # Layer 5
     h = keras.layers.Conv2D(1, 4, strides=1, padding='same')(h)
-
+    
+    #Note that no activation function was used in the last layer, no sigmoid?
     return keras.Model(inputs=inputs, outputs=h)
 
 
