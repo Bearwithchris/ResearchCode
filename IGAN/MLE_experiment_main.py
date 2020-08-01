@@ -7,7 +7,7 @@ Created on Mon Jul 27 14:18:25 2020
 import model 
 import loss as l
 import data
-import IMLE_fn2
+from IMLE import IMLE_fn2
 
 import tensorflow as tf
 import time 
@@ -65,19 +65,19 @@ def train_step(images):
       gen_loss = generator_loss(fake_output)
       disc_loss = discriminator_loss(real_output, fake_output)
       
-      # #Rec loss
-      lamb=0.2
-      rec_loss=IMLE_fn2.IMLE_Pixel(generated_images,train_images,1000)
-      new_gen_loss=gen_loss+rec_loss
-      
-    gradients_of_generator = gen_tape.gradient(new_gen_loss, generator.trainable_variables)
+        #Rec loss
+      lamb=0.4
+      rec_loss=IMLE_fn2.IMLE_Pixel(generated_images,train_images,500)
+      gen_loss=gen_loss+rec_loss
+           
+    gradients_of_generator = gen_tape.gradient(gen_loss, generator.trainable_variables)
     gradients_of_discriminator = disc_tape.gradient(disc_loss, discriminator.trainable_variables)
 
     generator_optimizer.apply_gradients(zip(gradients_of_generator, generator.trainable_variables))
     discriminator_optimizer.apply_gradients(zip(gradients_of_discriminator, discriminator.trainable_variables))
 
 def train(dataset, epochs):
-    checkpoint_dir = './training_checkpoints'
+    checkpoint_dir = './training_checkpoints_IMLE'
     checkpoint_prefix = os.path.join(checkpoint_dir, "ckpt")
     checkpoint = tf.train.Checkpoint(generator_optimizer=generator_optimizer,
                                  discriminator_optimizer=discriminator_optimizer,

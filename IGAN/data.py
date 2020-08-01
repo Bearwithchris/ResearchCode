@@ -16,6 +16,14 @@ def load_data_from_tf():
     
     return (train_images,train_labels)
 
+def load_test_data_from_tf():
+    #Load MNIST data
+    (train_images, train_labels),(test_images,test_labels)=tf.keras.datasets.mnist.load_data()
+    test_images = test_images.reshape(test_images.shape[0], 28, 28, 1).astype('float32')
+    test_images = (test_images - 127.5) / 127.5 # Normalize the images to [-1, 1]
+    
+    return (test_images,test_labels)
+
 
 def sample_Data(train_images,train_labels,total_samples,sample_breakdown):
     new_train_images=[]
