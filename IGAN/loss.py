@@ -21,12 +21,30 @@ def discriminator_loss(real_output, fake_output):
 
 def generator_loss(fake_output):
     return cross_entropy(tf.ones_like(fake_output), fake_output)
-        
+
+def discriminator_loss_LSGAN(real_output, fake_output):
+    real_loss=tf.reduce_mean(tf.losses.mean_squared_error(tf.ones_like(real_output),real_output))
+    fake_loss=tf.reduce_mean(tf.losses.mean_squared_error(tf.zeros_like(fake_output),fake_output))
+    # real_loss = cross_entropy(tf.ones_like(real_output), real_output)
+    # fake_loss = cross_entropy(tf.zeros_like(fake_output), fake_output)
+    total_loss = real_loss + fake_loss
+    return total_loss
+
+def generator_loss_LSGAN(fake_output):
+    # return cross_entropy(tf.ones_like(fake_output), fake_output)
+    return tf.reduce_mean(tf.losses.mean_squared_error(tf.ones_like(fake_output),fake_output))
+
+
+
 def loss_fn_searcher(lf):
     if (lf=="discriminator"):
         return discriminator_loss
     elif (lf=="generator"):
         return generator_loss
+    elif (lf=="discriminator_LSGAN"):
+        return discriminator_loss_LSGAN
+    elif (lf=="generator_LSGAN"):
+        return generator_loss_LSGAN
     else:
         print ("Invalid loss function")
         

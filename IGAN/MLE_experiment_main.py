@@ -15,7 +15,7 @@ from IPython import display
 import matplotlib.pyplot as plt
 import os
 
-EPOCHS = 100
+EPOCHS = 200 # was 150
 noise_dim = 100
 num_examples_to_generate = 16
 
@@ -27,12 +27,12 @@ discriminator=m.make_discriminator()
 
 
 #load optimisers
-generator_optimizer = tf.keras.optimizers.Adam(1e-4)
-discriminator_optimizer = tf.keras.optimizers.Adam(1e-4)
+generator_optimizer = tf.keras.optimizers.Adam(1e-4) #was 1e-4
+discriminator_optimizer = tf.keras.optimizers.Adam(1e-4) # was 1e-4
 
 #Load loss functions
-generator_loss=l.loss_fn_searcher("generator")
-discriminator_loss=l.loss_fn_searcher("discriminator")
+generator_loss=l.loss_fn_searcher("generator_LSGAN")
+discriminator_loss=l.loss_fn_searcher("discriminator_LSGAN")
     
 def generate_and_save_images(model, epoch, test_input):
   # Notice `training` is set to False.
@@ -65,11 +65,11 @@ def train_step(images):
       gen_loss = generator_loss(fake_output)
       disc_loss = discriminator_loss(real_output, fake_output)
       
-        #Rec loss
-      lamb=0.4
-      rec_loss=IMLE_fn2.IMLE_Pixel(generated_images,train_images,500)
-      gen_loss=gen_loss+rec_loss
-           
+      # #Rec loss
+      # lamb=36 #was 0.4
+      # rec_loss=IMLE_fn2.IMLE_Pixel(generated_images,new_train_images,new_train_labels,20,[3,6,7])
+      # gen_loss=gen_loss+rec_loss
+            
     gradients_of_generator = gen_tape.gradient(gen_loss, generator.trainable_variables)
     gradients_of_discriminator = disc_tape.gradient(disc_loss, discriminator.trainable_variables)
 
@@ -77,7 +77,7 @@ def train_step(images):
     discriminator_optimizer.apply_gradients(zip(gradients_of_discriminator, discriminator.trainable_variables))
 
 def train(dataset, epochs):
-    checkpoint_dir = './training_checkpoints_IMLE'
+    checkpoint_dir = './training_checkpoints'
     checkpoint_prefix = os.path.join(checkpoint_dir, "ckpt")
     checkpoint = tf.train.Checkpoint(generator_optimizer=generator_optimizer,
                                  discriminator_optimizer=discriminator_optimizer,
@@ -112,10 +112,15 @@ def train(dataset, epochs):
 if __name__=="__main__":
     #Load MNIST data
     BUFFER_SIZE = 60000
-    sample_breakdown=[0.3,0.2,0.1,0.1,0.1,0.08,0.06,0.058,0.001,0.001]
+    # sample_breakdown=[0.3,0.2,0.1,0.1,0.1,0.08,0.06,0.058,0.001,0.001]
+    
+    # sample_breakdown_count=[4000,4000,3000,3000,2000,2000,1,1,0,0]
+    sample_breakdown_count=[4000,4000,4000,10,4000,4000,20,30,4000,4000]
     
     train_images,train_labels= data.load_data_from_tf()
-    true_breakdown,new_train_images,new_train_labels=data.sample_Data(train_images,train_labels,BUFFER_SIZE,sample_breakdown)
+    # true_breakdown,new_train_images,new_train_labels=data.sample_Data(train_images,train_labels,BUFFER_SIZE,sample_breakdown)
+    true_breakdown,new_train_images,new_train_labels=data.sample_Data_by_Count(train_images,train_labels,sample_breakdown_count)
+
 
     BATCH_SIZE = 256 # was 256
     

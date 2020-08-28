@@ -24,6 +24,25 @@ def load_test_data_from_tf():
     
     return (test_images,test_labels)
 
+def sample_Data_by_Count(train_images,train_labels,sample_breakdown):
+    new_train_images=[]
+    new_train_labels=[]
+    true_breakdown=np.zeros(10)
+
+    #Find those samples
+    for j in range(len(train_labels)):
+        if sample_breakdown[train_labels[j]]!=0:
+            sample_breakdown[train_labels[j]]-=1
+            true_breakdown[train_labels[j]]+=1
+            new_train_images.append(train_images[j])
+            new_train_labels.append(train_labels[j])
+        
+        if np.sum(sample_breakdown==0):
+            break
+        
+    tb=true_breakdown
+        
+    return tb ,np.array(new_train_images),np.array(new_train_labels)
 
 def sample_Data(train_images,train_labels,total_samples,sample_breakdown):
     new_train_images=[]
@@ -58,12 +77,48 @@ def sample_Data(train_images,train_labels,total_samples,sample_breakdown):
         
     return tb ,np.array(new_train_images),np.array(new_train_labels)
 
-train_images,train_labels= load_data_from_tf()
-total_samples=60000
-sample_breakdown=[0.18,0.13,0.14,0.12,0.12,0.11,0.10,0.09,0.005,0.005]
-true_breakdown,new_train_images,new_train_labels=sample_Data(train_images,train_labels,total_samples,sample_breakdown)
-            
+def sample_Data_IVOM(test_images,test_labels,samples):
+    new_train_images=[[] for i in range(10) ]
+    
+    target_samples=np.ones(10)*samples
+
+    if (np.sum(target_samples!=0)):
+        #Find those samples
+        for j in range(len(test_labels)):
+            if target_samples[test_labels[j]]!=0:
+                target_samples[test_labels[j]]-=1
+                new_train_images[test_labels[j]].append(test_images[j]) 
+
+
         
+    return new_train_images
+
+def sample_Data_by_Count_IVOM(train_images,train_labels,sample_breakdown):
+    new_train_images=[[] for i in range(10) ]
+
+
+    if (np.sum(sample_breakdown!=0)):
+        #Find those samples
+        for j in range(len(train_labels)):
+            if sample_breakdown[train_labels[j]]!=0:
+                sample_breakdown[train_labels[j]]-=1
+                new_train_images[train_labels[j]].append(train_images[j]) 
+        
+    return new_train_images
+
+# train_images,train_labels= load_data_from_tf()
+# total_samples=60000
+# sample_breakdown=[0.3,0.2,0.1,0.1,0.1,0.08,0.06,0.058,0.001,0.001]
+# true_breakdown,new_train_images,new_train_labels=sample_Data(train_images,train_labels,total_samples,sample_breakdown)
             
+#Test sample_data_IVOM
+# test_images,test_labels= load_test_data_from_tf()
+# test=sample_Data_IVOM(test_images,test_labels,2)           
     
-    
+
+#Test Sample Breakdown by count
+train_images,train_labels= load_data_from_tf()
+# sample_breakdown=[1000,1000,500,500,300,300,200,200,10,10]
+sample_breakdown=[4000,4000,4000,10,4000,4000,20,30,4000,4000]
+true_breakdown,new_train_images,new_train_labels=sample_Data_by_Count(train_images,train_labels,sample_breakdown)
+          

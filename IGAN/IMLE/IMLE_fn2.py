@@ -37,6 +37,7 @@ def flattern_sample(data,ss):
     
     return (temp)
 
+#Sample a specific amount of data from the set
 def sample_fn(data,ss):
     #sample data
     data_index=[i for i in range(len(data))]
@@ -55,20 +56,38 @@ def sample_fn(data,ss):
 # train_images,train_labels=data.load_data_from_tf()
 # sample=flattern_sample(train_images,10)
 
+#Filter only the minority data as specified
+def filter_cat(data,data_labels,cat):
+    new_data=[]
+    data_labels=np.array(data_labels)
+    for i in (cat):
+        arg=np.where(data_labels==i)[0]
+        for j in arg:
+            new_data.append(data[j])
+    return np.array(new_data)
+        
+        
+        
+        
 
-def IMLE_Pixel(generated_data,data,sample):
+def IMLE_Pixel(generated_data,data,data_labels,sample,cat):
     # Take sample from the data and flattern
+    data=filter_cat(data,data_labels,cat)
     sample_data=sample_fn(data,sample)
     # distance_total=tf.Variable(0,dtype="float32")
     distance_total=0
     distance_total=tf.convert_to_tensor(distance_total,dtype="float32")
     for sample_data_one in sample_data:
         sample_data_one=np.reshape(sample_data_one,[1,28,28,1])
-        #Make a replicated sample
+        
+        #Make a replicate sample to the same dimensions as the generate
         tf_sample_data_one=tf.convert_to_tensor(sample_data_one, dtype="float32")
         replicated_sample=tf.repeat(tf_sample_data_one, repeats=[generated_data.shape[0]],axis=0)
+        
+        #Find the distance between sample and the generated data
         distance=tf.abs(tf.add(replicated_sample,tf.negative(generated_data)))
-        distance=tf.keras.backend.min(tf.reduce_mean(tf.reduce_mean(distance,1),1))
+        
+        distance=tf.keras.backend.min(tf.reduce_mean(tf.reduce_mean(distance,axis=1),1))
 
         distance_total=tf.add(tf.math.multiply(tf.constant(1/sample_data.shape[0]),distance),distance_total)
     
@@ -109,7 +128,7 @@ def IMLE_Pixel(generated_data,data,sample):
         
         
         
-train_images,train_labels= data.load_data_from_tf()
-mae=IMLE_Pixel(tf.Variable(train_images[0:20]),train_images[30:50],10)
+# train_images,train_labels= data.load_data_from_tf()
+# mae=IMLE_Pixel(tf.Variable(train_images[0:20]),train_images[30:50],10)
 
 # mae=mae.numpy()
