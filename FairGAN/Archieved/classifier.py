@@ -21,13 +21,17 @@ train_summary_writer = tf.summary.create_file_writer(out_file)
 
 train_dir1 = 'H:/Datasets/celebA_Male_female/669126_1178231_bundle_archive/Dataset/Train/Male'
 train_dir2 = 'H:/Datasets/celebA_Male_female/669126_1178231_bundle_archive/Dataset/Train/female'
-images_concat_shuffled,images_labels_concat_shuffled=data.prep_dataset(train_dir1,train_dir2)
+# images_concat_shuffled,images_labels_concat_shuffled=data.prep_dataset(train_dir1,train_dir2)
+
+images_labels_concat_shuffled,images_concat_shuffled=data.datasets(train_dir1,train_dir2,10000,bias=0.9,gamma=1.0)
+
+
 
 
 # test_dir1 = 'H:/Datasets/celebA_Male_female/669126_1178231_bundle_archive/Dataset/Test/Male'
 # test_dir2 = 'H:/Datasets/celebA_Male_female/669126_1178231_bundle_archive/Dataset/Test/female'
 
-
+# base_model=tf.keras.applications.ResNet50(
 base_model=tf.keras.applications.InceptionV3(
     include_top=False,
     weights='imagenet',
@@ -49,7 +53,7 @@ model.add(tf.keras.layers.Softmax())
 optimizer=tf.keras.optimizers.RMSprop(1e-4)
 
 EPOCH=20
-BATCH_SIZE=10
+BATCH_SIZE=64
 batch_num=len(images_labels_concat_shuffled)/BATCH_SIZE
 
 def cross_entropy_loss(expected_labels, predicted_labels):
