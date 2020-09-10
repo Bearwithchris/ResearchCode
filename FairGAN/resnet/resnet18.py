@@ -6,7 +6,7 @@ Created on Mon Aug 31 15:05:06 2020
 """
 
 import tensorflow as tf
-from residual_block import make_basic_block_layer
+from resnet.residual_block import make_basic_block_layer
 
 NUM_CLASSES = 2
 
@@ -14,7 +14,7 @@ class ResNetTypeI(tf.keras.Model):
     def __init__(self, layer_params):
         super(ResNetTypeI, self).__init__()
         
-        self.gen_input_shape=[227,227,3]
+        self.gen_input_shape=[224,224,3]
         self.conv1 = tf.keras.layers.Conv2D(filters=64,
                                             kernel_size=(7, 7),
                                             strides=2,
@@ -66,4 +66,4 @@ class ResNetTypeI(tf.keras.Model):
 def make_resnet_18():
     return ResNetTypeI(layer_params=[2, 2, 2, 2])
 
-model=make_resnet_18().call()
+# model=make_resnet_18().call()

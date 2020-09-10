@@ -43,7 +43,7 @@ def create_model():
     model=resnet18.make_resnet_18().call(isTrain=False)
     model.trainable=False
     
-    optimizer=tf.keras.optimizers.RMSprop(1e-4)
+    optimizer=tf.keras.optimizers.Adam(1e-4)
     
     return model,optimizer
 
@@ -77,7 +77,7 @@ def sort(listDir):
         placeHolder[numerics[i]-1]=listDir[i]
     return placeHolder
 
-images_labels_concat_shuffled,images_concat_shuffled=data.datasets(test_dir1,test_dir2,1300,bias=0.9)
+images_labels_concat_shuffled,images_concat_shuffled=data.datasets(test_dir1,test_dir2,13000,bias=0.6)
 
 EPOCH=15
 BATCH_SIZE=64

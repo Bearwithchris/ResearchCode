@@ -24,7 +24,7 @@ train_dir1 = 'H:/Datasets/celebA_Male_female/669126_1178231_bundle_archive/Datas
 train_dir2 = 'H:/Datasets/celebA_Male_female/669126_1178231_bundle_archive/Dataset/Train/female'
 # images_concat_shuffled,images_labels_concat_shuffled=data.prep_dataset(train_dir1,train_dir2)
 
-images_labels_concat_shuffled,images_concat_shuffled=data.datasets(train_dir1,train_dir2,13000,bias=0.9)
+images_labels_concat_shuffled,images_concat_shuffled=data.datasets(train_dir1,train_dir2,13000,bias=0.5)
 
 
 
@@ -35,9 +35,9 @@ images_labels_concat_shuffled,images_concat_shuffled=data.datasets(train_dir1,tr
 model=resnet18.make_resnet_18().call()
 tf.keras.utils.plot_model(model , to_file='resnet.png', show_shapes=True, dpi=64) #Added to visualise model
 
-optimizer=tf.keras.optimizers.RMSprop(1e-4)
+optimizer=tf.keras.optimizers.Adam(1e-4)
 
-EPOCH=15
+EPOCH=10
 BATCH_SIZE=64
 batch_num=len(images_labels_concat_shuffled)/BATCH_SIZE
 
@@ -72,6 +72,7 @@ def train(dataset,labels):
         count=0
         losses_Train=[]
         acc_Train=[]
+        
         for image_batch,label_batch in zip(dataset,labels):
             count+=1
             # dataset=iter(dataset)
