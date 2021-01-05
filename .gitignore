@@ -6,3 +6,4 @@ GAN_demo/GAN_demo_2_CNN/params_discriminator_epoch_002.hdf5
 *.hdf5
 *.h5
 *.pdf
+proGAN/models.zip
